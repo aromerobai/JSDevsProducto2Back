@@ -1,7 +1,10 @@
 const Semestre = require("../models/Semestre");
+const Asignatura = require("../models/Asignatura");
 
 const resolvers = {
   Query: {
+
+    //querys para Semestres
     hello: () => "Hello world",
 
     getAllSemestre: async () => {
@@ -12,9 +15,41 @@ const resolvers = {
     async getSemestre(_, { id }) {
       return await Semestre.findById(id);
     },
+
+    //querys para asignaturas
+
+    getAllAsignatura: async () => {
+      try {
+        const asignaturas = await Asignatura.find();
+        return asignaturas;
+      } catch (error) {
+        console.error(error);
+        throw new Error('Error al obtener todas las asignaturas');
+      }
+    },
+    getAsignatura: async (_, { id }) => {
+      try {
+        const asignatura = await Asignatura.findById(id);
+        return asignatura;
+      } catch (error) {
+        console.error(error);
+        throw new Error(`Error al obtener la asignatura con ID ${id}`);
+      }
+    },
+    getAsignaturasBySemestre: async (_, { semestreId }) => {
+      try {
+        const asignaturas = await Asignatura.find({ semestreId });
+        return asignaturas;
+      } catch (error) {
+        console.error(error);
+        throw new Error(`Error al obtener las asignaturas del semestre con ID ${semestreId}`);
+      }
+    },
   },
   
+  
   Mutation: {
+    //Mutations para semestres
     async createSemestre(parent, { SemestreInput }, context, info) {
       const { nombre, descripcion, anno, inicio, final, color } = SemestreInput; 
       const newSemestre = new Semestre({ nombre, descripcion, anno, inicio, final, color });
@@ -33,6 +68,39 @@ const resolvers = {
         await Semestre.deleteOne({ _id: semestreToDelete._id });
         return "Semestre Deleted";
     },
+
+    //Mutations para ASIGNATURAS
+    getAllAsignatura: async () => {
+      try {
+        const asignaturas = await Asignatura.find();
+        return asignaturas;
+      } catch (error) {
+        console.error(error);
+        throw new Error('Error al obtener todas las asignaturas');
+      }
+    },
+
+    getAsignatura: async (_, { id }) => {
+      try {
+        const asignatura = await Asignatura.findById(id);
+        return asignatura;
+      } catch (error) {
+        console.error(error);
+        throw new Error(`Error al obtener la asignatura con ID ${id}`);
+      }
+    },
+
+    getAsignaturasBySemestre: async (_, { semestreId }) => {
+      try {
+        const asignaturas = await Asignatura.find({ semestreId });
+        return asignaturas;
+      } catch (error) {
+        console.error(error);
+        throw new Error(`Error al obtener las asignaturas del semestre con ID ${semestreId}`);
+      }
+    },
+  
+
   },
 };
 
