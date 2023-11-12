@@ -4,6 +4,7 @@
   "description": "Producto 2 de la asignatura de Desarrollo full stack de soluciones web con JavaScript y servicios web la parte de Back End",
   "main": "index.js",
   "scripts": {
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
