@@ -32,7 +32,6 @@ const typeDefs = gql`
     deleteSemestreByIndex(index: Int): String
   }
 
-
 `; 
 
 

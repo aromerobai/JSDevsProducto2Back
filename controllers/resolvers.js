@@ -13,6 +13,7 @@ const resolvers = {
       return await Semestre.findById(id);
     },
   },
+  
   Mutation: {
     async createSemestre(parent, { SemestreInput }, context, info) {
       const { nombre, descripcion, anno, inicio, final, color } = SemestreInput; 
