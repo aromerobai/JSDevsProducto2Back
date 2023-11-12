@@ -1,40 +1,8 @@
 var ListaSemestres = [];
 
-function inicializarListaSemestres() {
-    if (localStorage.getItem('ListaSemestres')) {
-        // Si existe en localStorage, cárgala en la variable
-        ListaSemestres = JSON.parse(localStorage.getItem('ListaSemestres'));
-    } else {
-        // Si no existe en localStorage
-        ListaSemestres = [];
-    }
-    fetch('http://localhost:3000/api', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-        query: `
-        query {
-            hello
-        }
-        `,
-    }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Datos obtenidos:', data);
-        // Aquí puedes manejar los datos obtenidos
-    })
-    .catch(error => {
-        console.error('Error en la solicitud:', error);
-    });
-}
-
 // Llama a la función cuando el documento esté listo
 document.addEventListener('DOMContentLoaded', function() {
-    inicializarListaSemestres();
-    actualizarVista();  
+    cargarSemestresDesdeAPI();  
 });
 
 document.getElementById("nuevoSemestreForm").addEventListener("submit", function (event) {
@@ -49,23 +17,21 @@ document.getElementById("nuevoSemestreForm").addEventListener("submit", function
     var color = document.getElementById("color").value;
     //var asignaturas=[];
     
-    var semestre = { nombre: nombre, descripcion: descripcion, anno: anno, inicio: inicio, final: final, color: color };
-    ListaSemestres.push(semestre);
-  
+    //Creamos un semestre nuevo en el servidor.
+    guardarSemestreEnServidor(nombre, descripcion, anno, inicio, final, color);
+    
     // Limpia el formulario
     document.getElementById("nuevoSemestreForm").reset();
     
     // Oculta el modal
     $('#exampleModal').modal('hide')
-
-    //Llamamos a actualizar a la vista
-    actualizarVista();
+    cargarSemestresDesdeAPI();
 });
 
-function actualizarVista() {
+async function actualizarVista() {
+    
     var contenedorHTML = document.getElementById("semestres");
     contenedorHTML.innerHTML = '';
-
     // Recorre el vector y genera HTML para cada objeto
     ListaSemestres.forEach(function (objeto, index) {
         // Genera elementos HTML
@@ -94,11 +60,106 @@ function actualizarVista() {
             var url = "../html/detalle.html?index=" + index;
             window.location.href = url;
         });
-        localStorage.setItem('ListaSemestres', JSON.stringify(ListaSemestres));
+
     });
 }
 
-function eliminarElemento(index) {
+function cargarSemestresDesdeAPI() {
+    fetch('http://localhost:3000/api', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            query: `
+            query Query {
+                getAllSemestre {
+                    id
+                    nombre
+                    descripcion
+                    anno
+                    inicio
+                    final
+                    color
+                }
+            }
+            `,
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data && data.data) {
+            const semestresFromAPI = data.data.getAllSemestre;
+            ListaSemestres = semestresFromAPI.map(semestre => ({
+                nombre: semestre.nombre,
+                descripcion: semestre.descripcion,
+                anno: semestre.anno,
+                inicio: semestre.inicio,
+                final: semestre.final,
+                color: semestre.color
+            }));
+            console.log(ListaSemestres);
+            actualizarVista();
+        } else {
+            console.error('Error en la respuesta GraphQL:', data);
+        }
+    })
+    .catch(error => {
+        console.error('Error en la solicitud GraphQL:', error);
+    });
+}
+
+function guardarSemestreEnServidor(nombre, descripcion, anno, inicio, final, color) {
+    fetch('http://localhost:3000/api', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            query: `
+            mutation ($nombre: String, $descripcion: String, $anno: String, $inicio: String, $final: String, $color: String) {
+                createSemestre(SemestreInput: {
+                    nombre: $nombre,
+                    descripcion: $descripcion,
+                    anno: $anno,
+                    inicio: $inicio,
+                    final: $final,
+                    color: $color
+                }) {
+                    nombre
+                    descripcion
+                    anno
+                    inicio
+                    final
+                    color
+                }
+            }
+            `,
+            variables: {
+                nombre: nombre,
+                descripcion: descripcion,
+                anno: anno,
+                inicio: inicio,
+                final: final,
+                color: color
+            }
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data && data.errors) {
+            console.error('Error en la respuesta GraphQL:', data.errors);
+        } else {
+            console.log("Semestre creado:", data.data.createSemestre);
+            cargarSemestresDesdeAPI();
+        }
+    })
+    .catch(error => {
+        console.error('Error en la solicitud GraphQL:', error);
+    });
+}
+
+function eliminarElemento(indice) {
 
     var alertDiv = document.createElement("div");
     alertDiv.className = "alert alert-warning alert-dismissible fade show";
@@ -117,13 +178,40 @@ function eliminarElemento(index) {
     document.getElementById("btnCancelar").addEventListener("click", function () {
         document.body.removeChild(alertDiv); // Cierra la alerta
     });
-
+    console.log(indice);
     // Agrega un evento al botón de aceptar
     document.getElementById("btnAceptar").addEventListener("click", function () {
-        document.body.removeChild(alertDiv); // Cierra la alerta
-        // Elimina el elemento correspondiente de miLista
-        ListaSemestres.splice(index, 1);
-        // Actualiza la vista
-        actualizarVista();
+        //Lo eleminamos del servidor
+        fetch('http://localhost:3000/api', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            query: `
+                mutation DeleteSemestreByIndex($index: Int) {
+                    deleteSemestreByIndex(index: $index)
+                }    
+            `,
+            variables: {
+                "index": indice,
+            }
+        }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.errors) {
+                console.error('Error en la respuesta GraphQL:', data.errors);
+            } else {
+                console.log(indice);
+                cargarSemestresDesdeAPI();
+                console.log("Semestre eleiminado:", data.data.createSemestre);
+            }
+        })
+        .catch(error => {
+            console.error('Error en la solicitud GraphQL:', error);
+        });
+         
+        document.body.removeChild(alertDiv);
     });
 }

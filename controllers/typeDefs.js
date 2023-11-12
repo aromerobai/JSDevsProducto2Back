@@ -1,29 +1,40 @@
 const { gql } = require("apollo-server-express");
 
 const typeDefs = gql`
-  type Task {
+  type Semestre {
     id: ID
-    title: String
-    description: String
+    nombre:String,
+    descripcion:String,
+    anno:  String,
+    inicio: String,
+    final: String,
+    color:String,
   }
+
+  input SemestreInput {
+    nombre: String
+    descripcion: String
+    anno: String
+    inicio: String
+    final: String
+    color: String
+  }   
 
   type Query {
     hello: String
-    getAllTasks: [Task]
-    getTask(id: ID): Task
-  }
-
-  input TaskInput {
-    title: String
-    description: String
+    getAllSemestre: [Semestre]
+    getSemestre(id: ID): Semestre
   }
 
   type Mutation {
-    createTask(task: TaskInput): Task
-    deleteTask(id: ID): String
-    updateTask(id: ID, task: TaskInput): Task
+    createSemestre(SemestreInput: SemestreInput): Semestre
+    deleteSemestre(id: ID): String
+    deleteSemestreByIndex(index: Int): String
   }
-`;
+
+
+`; 
+
 
 module.exports = {
   typeDefs,
