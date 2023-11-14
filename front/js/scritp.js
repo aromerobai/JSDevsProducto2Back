@@ -99,6 +99,7 @@ function cargarSemestresDesdeAPI() {
                 color: semestre.color
             }));
             console.log(ListaSemestres);
+            
             actualizarVista();
         } else {
             console.error('Error en la respuesta GraphQL:', data);
@@ -107,6 +108,7 @@ function cargarSemestresDesdeAPI() {
     .catch(error => {
         console.error('Error en la solicitud GraphQL:', error);
     });
+    
 }
 
 function guardarSemestreEnServidor(nombre, descripcion, anno, inicio, final, color) {
@@ -152,7 +154,9 @@ function guardarSemestreEnServidor(nombre, descripcion, anno, inicio, final, col
         } else {
             console.log("Semestre creado:", data.data.createSemestre);
             cargarSemestresDesdeAPI();
+            
         }
+        
     })
     .catch(error => {
         console.error('Error en la solicitud GraphQL:', error);
@@ -205,7 +209,7 @@ function eliminarElemento(indice) {
             } else {
                 console.log(indice);
                 cargarSemestresDesdeAPI();
-                console.log("Semestre eleiminado:", data.data.createSemestre);
+                console.log("Semestre eliminado:", data.data.createSemestre);
             }
         })
         .catch(error => {

@@ -70,34 +70,19 @@ const resolvers = {
     },
 
     //Mutations para ASIGNATURAS
-    getAllAsignatura: async () => {
-      try {
-        const asignaturas = await Asignatura.find();
-        return asignaturas;
-      } catch (error) {
-        console.error(error);
-        throw new Error('Error al obtener todas las asignaturas');
-      }
+    async createAsignatura(parent, { AsignaturaInput }, context, info) {
+      const { nombre, descripcion, dificultad, estadoAsignatura, semestreId } = AsignaturaInput;
+      const newAsignatura = new Asignatura({ nombre, descripcion, dificultad, estadoAsignatura, semestreId });
+      await newAsignatura.save();
+      return newAsignatura;
     },
-
-    getAsignatura: async (_, { id }) => {
-      try {
-        const asignatura = await Asignatura.findById(id);
-        return asignatura;
-      } catch (error) {
-        console.error(error);
-        throw new Error(`Error al obtener la asignatura con ID ${id}`);
-      }
+    async updateAsignatura(_, { id, AsignaturaInput }) {
+      const updatedAsignatura = await Asignatura.findByIdAndUpdate(id, AsignaturaInput, { new: true });
+      return updatedAsignatura;
     },
-
-    getAsignaturasBySemestre: async (_, { semestreId }) => {
-      try {
-        const asignaturas = await Asignatura.find({ semestreId });
-        return asignaturas;
-      } catch (error) {
-        console.error(error);
-        throw new Error(`Error al obtener las asignaturas del semestre con ID ${semestreId}`);
-      }
+    async deleteAsignatura(_, { id }) {
+      await Asignatura.findByIdAndDelete(id);
+      return "Asignatura Deleted";
     },
   
 

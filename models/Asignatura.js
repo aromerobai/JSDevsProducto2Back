@@ -2,18 +2,22 @@
 const { Schema, model } = require("mongoose");
 
 const AsignaturaSchema = new Schema({
-    Nombre: { 
+    nombre: { 
         type: String,
         required: true 
     },
-    Descripcion: {
+    descripcion: {
         type: String 
     },
-    Dificultad: {
+    dificultad: {
         type: String 
     },
-    EstadoAsignatura: {
+    estadoAsignatura: {
         type: String 
+    },
+    semestreId: {
+        type: Schema.Types.ObjectId, // Cambiado a ObjectId
+        ref: 'Semestre' // Referencia al modelo Semestre
     },
     
 });
