@@ -57,7 +57,7 @@ async function actualizarVista() {
         });
         // Agrega un evento al botón para ver el detalle del elemento
         document.getElementById(`detalleBtn${index}`).addEventListener('click', function () {
-            var url = "../html/detalle.html?index=" + index;
+            var url = "../html/detalle.html?index=" + ListaSemestres[index].id;
             window.location.href = url;
         });
 
@@ -91,6 +91,7 @@ function cargarSemestresDesdeAPI() {
         if (data && data.data) {
             const semestresFromAPI = data.data.getAllSemestre;
             ListaSemestres = semestresFromAPI.map(semestre => ({
+                id: semestre.id,
                 nombre: semestre.nombre,
                 descripcion: semestre.descripcion,
                 anno: semestre.anno,
@@ -98,7 +99,6 @@ function cargarSemestresDesdeAPI() {
                 final: semestre.final,
                 color: semestre.color
             }));
-            console.log(ListaSemestres);
             actualizarVista();
         } else {
             console.error('Error en la respuesta GraphQL:', data);
@@ -110,6 +110,7 @@ function cargarSemestresDesdeAPI() {
 }
 
 function guardarSemestreEnServidor(nombre, descripcion, anno, inicio, final, color) {
+    
     fetch('http://localhost:3000/api', {
         method: 'POST',
         headers: {

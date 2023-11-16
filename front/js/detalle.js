@@ -1,4 +1,5 @@
-var index;
+var id;
+var indice;
 var ListaSemestres;
 
 function obtenerParametrosDeURL() {
@@ -19,40 +20,88 @@ function obtenerParametrosDeURL() {
         parametros[clave] = valor;
     }
 
-    index = parametros.index;
-    ListaSemestres = JSON.parse(localStorage.getItem('ListaSemestres'));
+    id = parametros.index;
+    ListaSemestres = cargarSemestresDesdeAPI();
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     var contenedorHTML = document.getElementById("encabezado");
     var div = document.createElement("div");
-    div.innerHTML = `
-        <div class="container vertical-center">
-            <div class="text-center">
-                <h1>${ListaSemestres[index].nombre}</h1>
-                <button type="button" class="btn btn-primary my-3" data-bs-toggle="modal" data-bs-target="#exampleModal">Detalles del Semestre</button>
-                <button type="button" class="btn btn-primary" onclick="modalAddCard()" data-bs-toggle="modal" data-bs-target="#AddUpdCard">Añadir Asignatura</button>
+
+    // Espera a que la promesa se resuelva completamente
+    var ListaSemestres = await cargarSemestresDesdeAPI();
+    indice = ListaSemestres.findIndex(elemento => elemento.id === id);
+
+    if (ListaSemestres && ListaSemestres.length > 0) {
+        div.innerHTML = `
+            <div class="container vertical-center">
+                <div class="text-center">
+                    <h1>${ListaSemestres[indice].nombre}</h1>
+                    <button type="button" class="btn btn-primary my-3" data-bs-toggle="modal" data-bs-target="#exampleModal">Detalles del Semestre</button>
+                    <button type="button" class="btn btn-primary" onclick="modalAddCard()" data-bs-toggle="modal" data-bs-target="#AddUpdCard">Añadir Asignatura</button>
+                </div>
             </div>
-        </div>
-    `;
-    contenedorHTML.appendChild(div);
+        `;
+        contenedorHTML.appendChild(div);
 
-
-    var descripcionLabel = document.getElementById("descripcionLabel");
-    descripcionLabel.textContent = ListaSemestres[index].descripcion;
-    var descripcionLabel = document.getElementById("anno");
-    descripcionLabel.textContent = ListaSemestres[index].anno;
-    var descripcionLabel = document.getElementById("inicio");
-    descripcionLabel.textContent = ListaSemestres[index].inicio;
-    var descripcionLabel = document.getElementById("final");
-    descripcionLabel.textContent = ListaSemestres[index].final; 
-    
-    /*if(ListaSemestres[index].asignaturas.length != 0){
-        ListaSemestres[index].asignaturas.forEach(function (asignatura, index) {
-            inicializarCards(asignatura.nombre,asignatura.descripcion,asignatura.pannel);
-        });
-    }*/
+        var descripcionLabel = document.getElementById("descripcionLabel");
+        descripcionLabel.textContent = ListaSemestres[indice].descripcion;
+        var annoLabel = document.getElementById("anno");
+        annoLabel.textContent = ListaSemestres[indice].anno;
+        var inicioLabel = document.getElementById("inicio");
+        inicioLabel.textContent = ListaSemestres[indice].inicio;
+        var finalLabel = document.getElementById("final");
+        finalLabel.textContent = ListaSemestres[indice].final;
+    }
 });
+
+async function cargarSemestresDesdeAPI() {
+    try {
+        const response = await fetch('http://localhost:3000/api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: `
+                    query Query {
+                        getAllSemestre {
+                            id
+                            nombre
+                            descripcion
+                            anno
+                            inicio
+                            final
+                            color
+                        }
+                    }
+                `,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (data && data.data) {
+            const semestresFromAPI = data.data.getAllSemestre;
+            return semestresFromAPI.map(semestre => ({
+                id: semestre.id,
+                nombre: semestre.nombre,
+                descripcion: semestre.descripcion,
+                anno: semestre.anno,
+                inicio: semestre.inicio,
+                final: semestre.final,
+                color: semestre.color
+            }));
+        } else {
+            console.error('Error en la respuesta GraphQL:', data);
+            return [];
+        }
+    } catch (error) {
+        console.error('Error en la solicitud GraphQL:', error);
+        return [];
+    }
+}
+
 
 function allowDrop(ev) {
     ev.preventDefault();

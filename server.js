@@ -1,7 +1,8 @@
 const express = require("express");
 const path = require("path");
 const { ApolloServer } = require("apollo-server-express");
-const { typeDefs, resolvers } = require("./controllers/SemestersController  ");
+const { typeDefs, resolvers } = require("./controllers/SemestersController");
+const { SubjecttypeDefs, Subjectresolvers } = require("./controllers/SubjectsController");
 const { connectDb } = require("./config/database.js");
 
 
@@ -19,8 +20,8 @@ app.get("/", (req, res) => {
 
 async function start() {
   const apolloServer = new ApolloServer({
-    typeDefs,
-    resolvers,
+    typeDefs: [typeDefs, SubjecttypeDefs],
+    resolvers: [resolvers, Subjectresolvers],
   });
 
   await apolloServer.start();
