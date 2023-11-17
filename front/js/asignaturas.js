@@ -51,8 +51,6 @@ function handleDrop(event, panel) {
 function yourFunctionToHandleDrop(draggedElement, panel) {
     var id_asigntura = "";
     var estado_asignatura = "";
-    
-    console.log("draggedElement ->" + draggedElement.innerHTML);
 
     const inputHidden = draggedElement.querySelector('input[type="hidden"]');
     if (inputHidden) {
@@ -181,7 +179,6 @@ function createCardConDatos(id,nombre,descripcion,dificultad,estado){
     clearLabels();
     i += 1;   
 
-    console.log("Estado-->" + estado);
     if (estado == "Empezada"){
         asignaturas_pannel.appendChild(card_div);
     }
@@ -295,9 +292,6 @@ function createCard(){
     .catch(error => {
         console.error('Error al crear el objeto:', error);
     });
-
-    
-
 }
 
 
@@ -372,7 +366,20 @@ function deleteCard(element){
         console.log(element.closest(".card"));
     }); 
     //Aqui va el borrado de la Asignatura-----------------------------------------------------------
-    
+    const elemento = document.getElementById('drag1');
+
+    // Encuentra el input dentro del elemento más cercano con la clase "card"
+    const inputId = elemento.closest('.card').querySelector('input[name="id"]').value;
+
+    eliminarAsignaturaEnServidor(inputId)
+    .then(() => {
+        console.log('Asignatura eliminada exitosamente');
+        // Realiza acciones adicionales después de eliminar la asignatura si es necesario
+    })
+    .catch(error => {
+        console.error('Error al eliminar la asignatura:', error);
+        // Manejo de errores
+    });
 }
 
 
@@ -512,3 +519,38 @@ const updateSubjectStateMutation = async (id, newState) => {
       throw new Error('Error al actualizar el estado de la asignatura');
     }
   };
+
+  function eliminarAsignaturaEnServidor(id) {
+    return new Promise((resolve, reject) => {
+      fetch('http://localhost:3000/api', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: `
+            mutation DeleteSubject($id: ID!) {
+              deleteSubject(id: $id)
+            }
+          `,
+          variables: {
+            id: id,
+          },
+        }),
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data && data.errors) {
+            console.error('Error en la respuesta GraphQL:', data.errors);
+            reject('Error en la respuesta GraphQL');
+          } else {
+            console.log("Asignatura eliminada");
+            resolve(); // Resuelve la promesa si se elimina correctamente
+          }
+        })
+        .catch(error => {
+          console.error('Error en la solicitud GraphQL:', error);
+          reject('Error en la solicitud GraphQL');
+        });
+    });
+  }
