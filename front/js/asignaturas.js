@@ -1,4 +1,6 @@
-const pannel = document.getElementById("asignaturas-pannel");
+const asignaturas_pannel = document.getElementById("asignaturas-pannel");
+const aprobado_pannel = document.getElementById("aprobada-pannel");
+const suspendida_pannel = document.getElementById("suspendida-pannel");
 const add_button = document.getElementById("add-card");
 const upd_button = document.getElementById("update-card");
 
@@ -7,9 +9,86 @@ add_button.addEventListener("click", createCard);
 const id_div = "drag"
 var i = 0;
 
-console.log("ID: " + id);
 
-function createCard(){    
+//Inicializo las asignaturas
+(async () => {
+    getAllSubjects()
+    .then(subjects => {
+        subjects.forEach(subject => {
+            if(subject.idSemestre == id){
+                createCardConDatos(subject.id, subject.nombre,subject.descripcion, subject.dificultad, subject.estado);
+            }
+        });
+    })
+    .catch(error => {
+        console.error('Ocurrió un error al obtener las asignaturas:', error);
+    });
+})();           
+
+//Añado listeners a los paneles
+asignaturas_pannel.addEventListener("drop", function(event) {
+    handleDrop(event, asignaturas_pannel);
+});
+
+aprobado_pannel.addEventListener("drop", function(event) {
+    handleDrop(event, aprobado_pannel);
+});
+
+suspendida_pannel.addEventListener("drop", function(event) {
+    handleDrop(event, suspendida_pannel);
+});
+
+function handleDrop(event, panel) {
+    event.preventDefault();
+    const data = event.dataTransfer.getData("text");
+    const draggedElement = document.getElementById(data);
+    
+    // Llama a la función pasando el panel como argumento
+    yourFunctionToHandleDrop(draggedElement, panel);
+}
+
+//Actualizo la asignatura al panel donde esta
+function yourFunctionToHandleDrop(draggedElement, panel) {
+    var id_asigntura = "";
+    var estado_asignatura = "";
+    
+    console.log("draggedElement ->" + draggedElement.innerHTML);
+
+    const inputHidden = draggedElement.querySelector('input[type="hidden"]');
+    if (inputHidden) {
+        id_asigntura = inputHidden.value;
+        console.log("Valor del input hidden:", id_asigntura);
+    } else {
+        console.log("No se encontró el input hidden dentro del elemento arrastrado.");
+    }
+
+    const colTitle = panel.querySelector('.col-title');
+    if (colTitle) {
+    const h2Element = colTitle.querySelector('h2');
+    if (h2Element) {
+        estado_asignatura = h2Element.textContent;
+        estado_asignatura = estado_asignatura.replace(/\s/g, '');
+        console.log("Contenido del h2:", estado_asignatura);
+    } else {
+        console.log("No se encontró el elemento h2 dentro de col-title.");
+    }
+    } else {
+    console.log("No se encontró el elemento con la clase col-title dentro del panel.");
+    }
+
+    updateSubjectStateMutation(id_asigntura, estado_asignatura)
+    .then(updatedSubject => {
+        console.log('Asignatura actualizada:', updatedSubject);
+        // Realiza las acciones necesarias con la asignatura actualizada
+    })
+    .catch(error => {
+        // Manejo de errores
+        console.error(error.message);
+    });
+
+}
+
+function createCardConDatos(id,nombre,descripcion,dificultad,estado){    
     /*Divs*/
     const card_div = document.createElement("div");    
     var res = id_div.concat(String(i));
@@ -28,7 +107,7 @@ function createCard(){
     card_body.classList.add("card-body");    
     
     /*Title*/
-    const title_val = document.getElementById("title").value;
+    const title_val = nombre;
     var nom = document.getElementById("title").value;
     const title_txt = document.createTextNode(title_val);
     const h5 = document.createElement("h5");    
@@ -36,7 +115,7 @@ function createCard(){
     h5.appendChild(title_txt);
 
     /*Description*/
-    const desc_val = document.getElementById("description").value;
+    const desc_val = descripcion;
     var desc = document.getElementById("description").value;
     const desc_txt = document.createTextNode(desc_val);
     const p_desc = document.createElement("p");    
@@ -47,14 +126,20 @@ function createCard(){
     p_desc.appendChild(br);
 
     /* Dificultad */
-    const difficulty_val = document.getElementById("difficulty").value;
+    const difficulty_val = dificultad;
     var difficulty_txt = document.createTextNode("Dificultad: " + difficulty_val);
     const p_difficulty = document.createElement("p");
     p_difficulty.classList.add("card-text");
     p_difficulty.classList.add("card-difficulty");
     p_difficulty.appendChild(difficulty_txt);
     
-    /*Update Button*/
+    /*ID de la asignatura Oculto*/
+    const hiddenInput = document.createElement("input");
+    hiddenInput.type = "hidden";
+    hiddenInput.name = "id"; // Puedes asignar un nombre al input hidden
+    hiddenInput.value = id;
+
+    /*Update Button
     const upd_button = document.createElement("btn");
     upd_button.setAttribute("id", "btn"+String(i));
     upd_button.setAttribute("type", "button");
@@ -65,7 +150,7 @@ function createCard(){
     upd_button.setAttribute("data-bs-target", "#AddUpdCard");
     upd_button.setAttribute("onclick", "modalUpdateCard(this)");
     const upd_button_txt = document.createTextNode("Modificar");
-    upd_button.appendChild(upd_button_txt);
+    upd_button.appendChild(upd_button_txt);*/
 
     /*Delete Button*/
     const del_button = document.createElement("btn");   
@@ -83,19 +168,136 @@ function createCard(){
     card_body.appendChild(h5);    
     card_body.appendChild(p_desc);
     card_body.appendChild(p_difficulty);
-    card_body.appendChild(upd_button);
+    card_body.appendChild(hiddenInput);
+    //card_body.appendChild(upd_button);
     card_body.appendChild(del_button);
 
     col_div.appendChild(card_body);
     row_div.appendChild(col_div);
     card_div.appendChild(row_div);
     
-    pannel.appendChild(card_div); 
+    //asignaturas_pannel.appendChild(card_div); 
 
     clearLabels();
     i += 1;   
 
+    console.log("Estado-->" + estado);
+    if (estado == "Empezada"){
+        asignaturas_pannel.appendChild(card_div);
+    }
+    else if (estado == "Aprobada") {
+        aprobado_pannel.appendChild(card_div);
+        
+    } else if (estado == "Suspendida"){
+        suspendida_pannel.appendChild(card_div);
+    }
+     
+}
+function createCard(){    
+
+    const title_val = document.getElementById("title").value;
+    const desc_val = document.getElementById("description").value;
+    const difficulty_val = document.getElementById("difficulty").value;
+    var difficulty_txt = document.createTextNode("Dificultad: " + difficulty_val);
+
+    var id_asignatura_creada = "";
+
+    guardarSubjectEnServidor(title_val, desc_val, difficulty_val, id, 'Empezada')
+    .then(id_asignatura_creada => {
+        /*Divs*/
+        const card_div = document.createElement("div");    
+        var res = id_div.concat(String(i));
+        card_div.setAttribute("id", res);
+
+        card_div.classList.add("card");
+        card_div.classList.add("mb-3");
+        card_div.setAttribute("draggable", "true");
+        card_div.setAttribute("ondragstart", "drag(event)");
+        const row_div = document.createElement("div");
+        row_div.classList.add("row");
+        row_div.classList.add("g-0");
+        const col_div = document.createElement("div");
+        col_div.classList.add("col-md-12");    
+        const card_body = document.createElement("div");
+        card_body.classList.add("card-body");    
+
+        /*Title*/
+        var nom = document.getElementById("title").value;
+        const title_txt = document.createTextNode(title_val);
+        const h5 = document.createElement("h5");    
+        h5.classList.add("card-title");
+        h5.appendChild(title_txt);
+
+        /*Description*/
+        var desc = document.getElementById("description").value;
+        const desc_txt = document.createTextNode(desc_val);
+        const p_desc = document.createElement("p");    
+        p_desc.classList.add("card-text");
+        p_desc.classList.add("card-description");
+        p_desc.appendChild(desc_txt);
+        const br = document.createElement("br");
+        p_desc.appendChild(br);
+
+        /* Dificultad */
+        const p_difficulty = document.createElement("p");
+        p_difficulty.classList.add("card-text");
+        p_difficulty.classList.add("card-difficulty");
+        p_difficulty.appendChild(difficulty_txt);
+
+        /*ID de la asignatura Oculto*/
+        const hiddenInput = document.createElement("input");
+        hiddenInput.type = "hidden";
+        hiddenInput.name = "id"; // Puedes asignar un nombre al input hidden
+        hiddenInput.value = id_asignatura_creada;
+
+        /*Update Button
+        const upd_button = document.createElement("btn");
+        upd_button.setAttribute("id", "btn"+String(i));
+        upd_button.setAttribute("type", "button");
+        upd_button.classList.add("btn");
+        upd_button.classList.add("btn-primary");
+        upd_button.classList.add("btn-sm");
+        upd_button.setAttribute("data-bs-toggle", "modal");
+        upd_button.setAttribute("data-bs-target", "#AddUpdCard");
+        upd_button.setAttribute("onclick", "modalUpdateCard(this)");
+        const upd_button_txt = document.createTextNode("Modificar");
+        upd_button.appendChild(upd_button_txt);*/
+
+        /*Delete Button*/
+        const del_button = document.createElement("btn");   
+        del_button.setAttribute("type", "button"); 
+        del_button.classList.add("btn");
+        del_button.classList.add("btn-danger");
+        del_button.classList.add("btn-sm");
+        del_button.classList.add("btn-delete");
+        del_button.setAttribute("data-bs-toggle", "modal");
+        del_button.setAttribute("data-bs-target", "#DeleteCard");
+        del_button.setAttribute("onclick", "deleteCard(this)");
+        const del_button_txt = document.createTextNode("Eliminar");
+        del_button.appendChild(del_button_txt);
+
+        card_body.appendChild(h5);    
+        card_body.appendChild(p_desc);
+        card_body.appendChild(p_difficulty);
+        card_body.appendChild(hiddenInput);
+        card_body.appendChild(upd_button);
+        card_body.appendChild(del_button);
+
+        col_div.appendChild(card_body);
+        row_div.appendChild(col_div);
+        card_div.appendChild(row_div);
+
+        asignaturas_pannel.appendChild(card_div); 
+
+        clearLabels();
+        i += 1;   
+     })
+    .catch(error => {
+        console.error('Error al crear el objeto:', error);
+    });
+
     
+
 }
 
 
@@ -133,6 +335,7 @@ function modalUpdateCard(element){
     document.getElementById("difficulty").value=getTextContent(difficulty);          
 }
 
+/*
 function updateCard(element){    
     const card_body = element.parentElement;     
     const title = card_body.children[0];     
@@ -145,7 +348,7 @@ function updateCard(element){
     title.appendChild(document.createTextNode(document.getElementById("title").value));        
     description.appendChild(document.createTextNode(document.getElementById("description").value));  
     difficulty.appendChild(document.createTextNode("Dificultad: " + document.getElementById("difficulty").value));      
-}
+}*/
 
 function changeModalTitle(element, action){
     deleteChilds(element);
@@ -163,5 +366,149 @@ function getTextContent(element){
 }
 
 function deleteCard(element){
-    document.getElementById("DeleteBtn").addEventListener("click", function() { element.closest(".card").remove()});        
+    
+    document.getElementById("DeleteBtn").addEventListener("click", function() { 
+        element.closest(".card").remove()
+        console.log(element.closest(".card"));
+    }); 
+    //Aqui va el borrado de la Asignatura-----------------------------------------------------------
+    
 }
+
+
+function guardarSubjectEnServidor(nombre, descripcion, dificultad, idSemestre, estado) {
+  return new Promise((resolve, reject) => {
+    fetch('http://localhost:3000/api', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: `
+          mutation ($nombre: String, $descripcion: String, $dificultad: String, $idSemestre: String, $estado: String) {
+            createSubject(SubjectInput: {
+              nombre: $nombre,
+              descripcion: $descripcion,
+              dificultad: $dificultad,
+              idSemestre: $idSemestre,
+              estado: $estado,
+            }) {
+              id
+              nombre
+              descripcion
+              dificultad
+              idSemestre
+              estado
+            }
+          }
+        `,
+        variables: {
+          nombre: nombre,
+          descripcion: descripcion,
+          dificultad: dificultad,
+          idSemestre: idSemestre,
+          estado: estado,
+        },
+      }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data && data.errors) {
+          console.error('Error en la respuesta GraphQL:', data.errors);
+          reject('Error en la respuesta GraphQL');
+        } else {
+          const createdSubject = data.data.createSubject;
+          console.log("Asignatura creada:", createdSubject);
+          resolve(createdSubject.id); // Resuelve la promesa con el ID del objeto creado
+        }
+      })
+      .catch(error => {
+        console.error('Error en la solicitud GraphQL:', error);
+        reject('Error en la solicitud GraphQL');
+      });
+  });
+}
+
+async function getAllSubjects() {
+    try {
+        const response = await fetch('http://localhost:3000/api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: `
+                query Query {
+                    getAllSubjects {
+                        id
+                        nombre
+                        descripcion
+                        dificultad
+                        idSemestre
+                        estado
+                    }
+                }
+                `,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (data && data.data) {
+            const subjectFromAPI = data.data.getAllSubjects;
+            return subjectFromAPI.map(Subject => ({
+                id: Subject.id,
+                nombre: Subject.nombre,
+                descripcion: Subject.descripcion,
+                dificultad: Subject.dificultad,
+                idSemestre: Subject.idSemestre,
+                estado: Subject.estado,
+            }));
+        } else {
+            console.error('Error en la respuesta GraphQL:', data);
+            return []; // O un valor que indique un error
+        }
+    } catch (error) {
+        console.error('Error en la solicitud GraphQL:', error);
+        return []; // O un valor que indique un error
+    }
+}
+
+const updateSubjectStateMutation = async (id, newState) => {
+    const graphqlUrl = 'http://localhost:3000/api'; // La URL de tu API GraphQL
+    
+    const requestBody = {
+      query: `
+        mutation UpdateSubjectState($id: ID!, $newState: String!) {
+          updateSubjectState(id: $id, newState: $newState) {
+            id
+            nombre
+            descripcion
+            dificultad
+            idSemestre
+            estado
+          }
+        }
+      `,
+      variables: {
+        id: id,
+        newState: newState,
+      },
+    };
+  
+    try {
+      const response = await fetch(graphqlUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+  
+      const data = await response.json();
+      return data.data.updateSubjectState;
+    } catch (error) {
+      console.error('Error al realizar la mutación:', error);
+      throw new Error('Error al actualizar el estado de la asignatura');
+    }
+  };

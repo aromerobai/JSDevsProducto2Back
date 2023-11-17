@@ -13,8 +13,10 @@ const subjectSchema = new Schema({
   },
   idSemestre:{
     type: String,
+  },
+  estado:{
+    type: String,
   }
-
 });
 
 module.exports = model("Subject", subjectSchema);
