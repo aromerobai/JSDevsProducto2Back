@@ -11,13 +11,11 @@
   "tasks": {
     "start": {
       "name": "start",
-      "command": "npm run start",
-      "runAtStart": false
+      "command": "npm run start"
     },
     "test": {
       "name": "test",
-      "command": "npm run test",
-      "runAtStart": false
+      "command": "npm run test"
     },
     "dev": {
       "name": "dev",
@@ -27,7 +25,10 @@
     "npm start": {
       "name": "npm start",
       "command": "npm start",
-      "runAtStart": true
+      "runAtStart": true,
+      "preview": {
+        "port": 3000
+      }
     }
   }
 }
