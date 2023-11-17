@@ -202,6 +202,7 @@ function createCard(){
     guardarSubjectEnServidor(title_val, desc_val, difficulty_val, id, 'Empezada')
     .then(id_asignatura_creada => {
         /*Divs*/
+        console.log("Entra en crear asignatura: " + id_asignatura_creada);
         const card_div = document.createElement("div");    
         var res = id_div.concat(String(i));
         card_div.setAttribute("id", res);
@@ -361,25 +362,26 @@ function getTextContent(element){
 
 function deleteCard(element){
     
-    document.getElementById("DeleteBtn").addEventListener("click", function() { 
-        element.closest(".card").remove()
-        console.log(element.closest(".card"));
-    }); 
-    //Aqui va el borrado de la Asignatura-----------------------------------------------------------
-    const elemento = document.getElementById('drag1');
-
-    // Encuentra el input dentro del elemento más cercano con la clase "card"
-    const inputId = elemento.closest('.card').querySelector('input[name="id"]').value;
-
-    eliminarAsignaturaEnServidor(inputId)
-    .then(() => {
-        console.log('Asignatura eliminada exitosamente');
-        // Realiza acciones adicionales después de eliminar la asignatura si es necesario
-    })
-    .catch(error => {
-        console.error('Error al eliminar la asignatura:', error);
-        // Manejo de errores
-    });
+        document.getElementById("DeleteBtn").addEventListener("click", function() { 
+            
+            const cardId = element.closest(".card").getAttribute("id");
+            console.log("ID de la tarjeta:", cardId);
+    
+            const inputId = document.querySelector(`#${cardId} input[name="id"]`).value;
+            console.log("ID de la asignatura:", inputId);
+            
+            eliminarAsignaturaEnServidor(inputId)
+            .then(() => {
+                console.log('Asignatura eliminada exitosamente');
+                // Realiza acciones adicionales después de eliminar la asignatura si es necesario
+            })
+            .catch(error => {
+                console.error('Error al eliminar la asignatura:', error);
+                // Manejo de errores
+            });
+            
+            element.closest(".card").remove()
+        }); 
 }
 
 
